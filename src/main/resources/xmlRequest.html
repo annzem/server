@@ -1,0 +1,19 @@
+<html>
+<body>
+<p id="field">time</p>
+<script>
+    function httpGet(theUrl) {
+        let xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", theUrl, false);
+        xmlHttp.send(null);
+        return xmlHttp.responseText;
+    }
+
+    function resp() {
+        document.getElementById("field").innerHTML = httpGet("http://127.0.0.1:8080/first")
+    }
+
+    setInterval(resp, 2000);
+</script>
+</body>
+</html>

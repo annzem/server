@@ -1,5 +1,6 @@
 package com.company;
 
+import org.apache.commons.io.IOUtils;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -24,36 +25,41 @@ public class MyServer {
                 output = clientSocket.getOutputStream();
                 input = clientSocket.getInputStream();
                 Date date = Calendar.getInstance().getTime();
+                int lengthDate = date.toString().length();
 
                 StringBuffer stringBuffer = new StringBuffer();
                 while (!stringBuffer.toString().endsWith("\r\n\r\n")) {
                     stringBuffer.append((char) input.read());
                 }
 
-                String html = "<html>\n" +
-                        "  <head>\n" +
-                        "    <title>An Example Page </title>\n" +
-                        "  </head>\n" +
-                        "  <body>\n" +
-                        "    <p>Hello World, this is a very simple HTML document.</p>\n" +
-                        date + "\n" +
-                        "  </body>\n" +
-                        "</html>";
+                String path = stringBuffer.toString().split("\n")[0].split(" ")[1];
+
+//                FileInputStream fis = new FileInputStream("/home/anna/IdeaProjects/server_connection/src/main/resources/xmlRequest.html");
+                FileInputStream fis = new FileInputStream("/home/anna/IdeaProjects/server_connection/src/main/resources/jQueryRequest.html");
+                String html = IOUtils.toString(fis, "UTF-8");
 
                 String response = "HTTP/1.1 200 OK\n" +
                         "Date: Mon, 23 May 2005 22:38:34 GMT\n" +
                         "Content-Type: text/html; charset=UTF-8\n" +
-                        "Content-Length: " + html.getBytes().length + "\n" +
-                        "Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n" +
-                        "Server: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)\n" +
-                        "ETag: \"3f80f-1b6-3e1cb03b\"\n" +
+                        "Content-Length: " + html.length() + "\n" +
                         "Accept-Ranges: bytes\n" +
                         "Connection: close\n" +
                         "\n" + html;
 
-                stringBuffer.toString();
+                String response1 = "HTTP/1.1 200 OK\n" +
+                        "Content-Type: text/html; charset=UTF-8\n" +
+                        "Content-Length: " + lengthDate + "\n" +
+                        "Accept-Ranges: bytes\n" +
+                        "Connection: close\n" +
+                        "\n" +
+                        date;
 
-                output.write(response.getBytes());
+                if (path.equals("/")) {
+                    output.write(response.getBytes());
+                }
+                if (path.equals("/first")) {
+                    output.write(response1.getBytes());
+                }
 
                 output.flush();
                 input.close();
