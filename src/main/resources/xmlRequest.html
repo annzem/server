@@ -1,6 +1,8 @@
 <html>
 <body>
 <p id="field">time</p>
+<input type="checkbox" id="check1" onclick="checkStatus()">
+<label>activate</label><br>
 <script>
     function httpGet(theUrl) {
         let xmlHttp = new XMLHttpRequest();
@@ -13,7 +15,24 @@
         document.getElementById("field").innerHTML = httpGet("http://127.0.0.1:8080/first")
     }
 
-    setInterval(resp, 2000);
+    let timer;
+
+    function updateTime() {
+        timer = setInterval(resp, 1000);
+    }
+
+
+    function checkStatus() {
+        if (document.getElementById("check1").checked) {
+            updateTime();
+        }
+        if (!document.getElementById("check1").checked) {
+            clearInterval(timer);
+            document.getElementById("field").innerHTML = "time"
+        }
+    }
+
+
 </script>
 </body>
 </html>
