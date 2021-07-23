@@ -6,7 +6,6 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -21,6 +20,10 @@ public class MyServer {
     static String jQueryPath = "/home/anna/IdeaProjects/server_connection/src/main/resources/jQueryRequest.html";
     static String guestBookPath = "/home/anna/IdeaProjects/server_connection/src/main/resources/guestBook.html";
     private static List<String> comments = new ArrayList<>();
+    private static List<String> commentsF = new ArrayList<>();
+    static String responseGuestbook;
+    static String newWord;
+    static String html;
 
     public static void main(String[] args) {
         comments.add("The worst experience in my life! The color they gave me nothing to do with what I wanted. </br>Bad customer service, I had to go back so they could try to fix what they had done and the owner didn't even deign to ask me what had happened. </br>Marco R.<hr/>");
@@ -67,63 +70,80 @@ public class MyServer {
                     byte[] bodyArray = new byte[bodyLengthInt];
                     bodyBuffer.append((char) input.read(bodyArray, 0, bodyLengthInt));
                     body = new String(bodyArray);
-                    String newCommentEnc = body.split("comment=")[1];
-
-                    newComment = URLDecoder.decode(newCommentEnc, StandardCharsets.UTF_8.toString());
-                    comments.add(newComment+"<hr/>");
+                    if (body.contains("comment=")) {
+                        String newCommentEnc = body.split("comment=")[1];
+                        newComment = URLDecoder.decode(newCommentEnc, StandardCharsets.UTF_8.toString());
+                        comments.add(newComment + "<hr/>");
+                    }
+                    if (body.contains("word=")) {
+                        String newWordEnc = body.split("word=")[1];
+                        newWord = URLDecoder.decode(newWordEnc, StandardCharsets.UTF_8.toString());
+                    }
                 }
 
                 String path = headers.toString().split("\n")[0].split(" ")[1];
-                if (path.equals("/")) {
-                    String html = readFile(xmlPath);
-                    String response = "HTTP/1.1 200 OK\n" +
-                            "Date: Mon, 23 May 2005 22:38:34 GMT\n" +
-                            "Content-Type: text/html; charset=UTF-8\n" +
-                            "Content-Length: " + html.length() + "\n" +
-                            "Accept-Ranges: bytes\n" +
-                            "Connection: close\n" +
-                            "\n" + html;
-
-                    output.write(response.getBytes());
-                }
-                if (path.equals("/first")) {
-                    String response1 = "HTTP/1.1 200 OK\n" +
-                            "Content-Type: text/html; charset=UTF-8\n" +
-                            "Content-Length: " + lengthDate + "\n" +
-                            "Accept-Ranges: bytes\n" +
-                            "Connection: close\n" +
-                            "\n" +
-                            date;
-
-                    output.write(response1.getBytes());
-                }
+//                if (path.equals("/time")) {
+//                    String html = readFile(xmlPath);
+//                    String response = "HTTP/1.1 200 OK\n" +
+//                            "Date: Mon, 23 May 2005 22:38:34 GMT\n" +
+//                            "Content-Type: text/html; charset=UTF-8\n" +
+//                            "Content-Length: " + html.length() + "\n" +
+//                            "Accept-Ranges: bytes\n" +
+//                            "Connection: close\n" +
+//                            "\n" + html;
+//
+//                    output.write(response.getBytes());
+//                }
+//                if (path.equals("/time1")) {
+//                    String response1 = "HTTP/1.1 200 OK\n" +
+//                            "Content-Type: text/html; charset=UTF-8\n" +
+//                            "Content-Length: " + lengthDate + "\n" +
+//                            "Accept-Ranges: bytes\n" +
+//                            "Connection: close\n" +
+//                            "\n" +
+//                            date;
+//
+//                    output.write(response1.getBytes());
+//                }
                 if (path.equals("/guestbook")) {
-                    String html = readFile(guestBookPath);
-
-                    StringBuffer commentsStr = new StringBuffer();
-                    for (String comment : comments) {
-                        commentsStr.append("<p>");
-                        commentsStr.append(comment);
-                        commentsStr.append("</p>");
+                    if (newWord == null) {
+                        drawComments(true);
+                    } else {
+                        drawComments(false);
                     }
-                    html = html.replace("<comments/>", commentsStr);
-
-                    String responseGuestbook = "HTTP/1.1 200 OK\n" +
-                            "Content-Type: text/html; charset=utf-8\n" +
-                            "Content-Length: " + html.length() + "\n" +
-                            "Accept-Ranges: bytes\n" +
-                            "Connection: close\n" +
-                            "\n" + html;
-
                     output.write(responseGuestbook.getBytes());
+                    output.flush();
+                    input.close();
+                    output.close();
                 }
-
-                output.flush();
-                input.close();
-                output.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void drawComments(boolean add) {
+        html = readFile(guestBookPath);
+        StringBuffer commentsStr = new StringBuffer();
+        for (String comment : comments) {
+            if (add) {
+                commentsStr.append("<p>");
+                commentsStr.append(comment);
+                commentsStr.append("</p>");
+            } else {
+                if (comment.contains(newWord)) {
+                    commentsStr.append("<p>");
+                    commentsStr.append(comment);
+                    commentsStr.append("</p>");
+                }
+            }
+        }
+        html = html.replace("<comments/>", commentsStr);
+        responseGuestbook = "HTTP/1.1 200 OK\n" +
+                "Content-Type: text/html; charset=utf-8\n" +
+                "Content-Length: " + html.length() + "\n" +
+                "Accept-Ranges: bytes\n" +
+                "Connection: close\n" +
+                "\n" + html;
     }
 }
