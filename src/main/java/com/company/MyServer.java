@@ -13,22 +13,19 @@ import java.util.Date;
 import java.util.List;
 
 public class MyServer {
+    private static final int PORT = 8080;
     private static ServerSocket serverSocket;
-    private static InputStream input;
-    private static OutputStream output;
+
     static String xmlPath = "/home/anna/IdeaProjects/server_connection/src/main/resources/xmlRequest.html";
     static String jQueryPath = "/home/anna/IdeaProjects/server_connection/src/main/resources/jQueryRequest.html";
     static String guestBookPath = "/home/anna/IdeaProjects/server_connection/src/main/resources/guestBook.html";
     private static List<String> comments = new ArrayList<>();
-    private static List<String> commentsF = new ArrayList<>();
-    static String responseGuestbook;
-    static String newWord;
-    static String html;
 
     public static void main(String[] args) {
         comments.add("The worst experience in my life! The color they gave me nothing to do with what I wanted. </br>Bad customer service, I had to go back so they could try to fix what they had done and the owner didn't even deign to ask me what had happened. </br>Marco R.<hr/>");
         comments.add("Excellent work and attention, as always. Thank you <3</br> Janet Lisovsky<hr/>");
-        connectToServer();
+        MyServer myServer = new MyServer();
+        myServer.connectToServer();
     }
 
     public static String readFile(String path) {
@@ -41,25 +38,24 @@ public class MyServer {
         }
     }
 
-    public static void connectToServer() {
+    public void connectToServer() {
         try {
-            serverSocket = new ServerSocket(8080);
+            serverSocket = new ServerSocket(PORT);
             while (true) {
                 Socket clientSocket = serverSocket.accept();
 
-                output = clientSocket.getOutputStream();
-                input = clientSocket.getInputStream();
-                Date date = Calendar.getInstance().getTime();
-                int lengthDate = date.toString().length();
+                OutputStream output = clientSocket.getOutputStream();
+                InputStream input = clientSocket.getInputStream();
+
 
                 StringBuffer headers = new StringBuffer();
                 while (!headers.toString().endsWith("\r\n\r\n")) {
                     headers.append((char) input.read());
                 }
+                String[] startingLineSegments = headers.toString().split("\n")[0].split(" ");
+                String method = startingLineSegments[0];
 
-                String method = headers.toString().split("\n")[0].split(" ")[0];
-                String body;
-                String newComment;
+                String body = null;
 
                 if (method.equals("POST")) {
                     StringBuffer bodyBuffer = new StringBuffer();
@@ -70,68 +66,77 @@ public class MyServer {
                     byte[] bodyArray = new byte[bodyLengthInt];
                     bodyBuffer.append((char) input.read(bodyArray, 0, bodyLengthInt));
                     body = new String(bodyArray);
-                    if (body.contains("comment=")) {
-                        String newCommentEnc = body.split("comment=")[1];
-                        newComment = URLDecoder.decode(newCommentEnc, StandardCharsets.UTF_8.toString());
-                        comments.add(newComment + "<hr/>");
-                    }
-                    if (body.contains("word=")) {
-                        String newWordEnc = body.split("word=")[1];
-                        newWord = URLDecoder.decode(newWordEnc, StandardCharsets.UTF_8.toString());
-                    }
+                }
+                String path = startingLineSegments[1];
+
+                StringBuffer response;
+                try {
+                    response = processResponse(method, headers.toString(), startingLineSegments, body, path);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    StringWriter errors = new StringWriter();
+                    e.printStackTrace(new PrintWriter(errors));
+                    response = createResponse("<html><h1>internal server error</h1><p>"
+                                    + errors.toString() + "</p></html>", 500,
+                            "INTERNAL SERVER ERROR");
                 }
 
-                String path = headers.toString().split("\n")[0].split(" ")[1];
-//                if (path.equals("/time")) {
-//                    String html = readFile(xmlPath);
-//                    String response = "HTTP/1.1 200 OK\n" +
-//                            "Date: Mon, 23 May 2005 22:38:34 GMT\n" +
-//                            "Content-Type: text/html; charset=UTF-8\n" +
-//                            "Content-Length: " + html.length() + "\n" +
-//                            "Accept-Ranges: bytes\n" +
-//                            "Connection: close\n" +
-//                            "\n" + html;
-//
-//                    output.write(response.getBytes());
-//                }
-//                if (path.equals("/time1")) {
-//                    String response1 = "HTTP/1.1 200 OK\n" +
-//                            "Content-Type: text/html; charset=UTF-8\n" +
-//                            "Content-Length: " + lengthDate + "\n" +
-//                            "Accept-Ranges: bytes\n" +
-//                            "Connection: close\n" +
-//                            "\n" +
-//                            date;
-//
-//                    output.write(response1.getBytes());
-//                }
-                if (path.equals("/guestbook")) {
-                    if (newWord == null) {
-                        drawComments(true);
-                    } else {
-                        drawComments(false);
-                    }
-                    output.write(responseGuestbook.getBytes());
-                    output.flush();
-                    input.close();
-                    output.close();
-                }
+                output.write(response.toString().getBytes());
+                output.flush();
+                input.close();
+                output.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static void drawComments(boolean add) {
-        html = readFile(guestBookPath);
+    private StringBuffer processResponse(String method, String headers, String startingLineSegments[], String body, String path) throws UnsupportedEncodingException, InterruptedException {
+        if (method.equals("GET")) {
+            if (path.equals("/time")) {
+                return createResponse(readFile(xmlPath));
+            } else if (path.equals("/time1")) {
+                Date date = Calendar.getInstance().getTime();
+                return createResponse(date.toString());
+            } else if (path.equals("/guestbook")) {
+                String keyWord = null;
+                if (headers.contains("word=")) {
+                    try {
+                        keyWord = startingLineSegments[1].split("word=")[1];
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    int n = startingLineSegments[1].indexOf("?");
+                    path = startingLineSegments[1].substring(0, n);
+                }
+                return createResponse(drawComments(keyWord));
+            }
+        } else if (method.equals("POST")) {
+            if (body.contains("comment=")) {
+                String newCommentEnc = body.split("comment=")[1];
+                String newComment = URLDecoder.decode(newCommentEnc, StandardCharsets.UTF_8.toString());
+                comments.add(newComment + "<hr/>");
+                return createResponseRedirect("http", "localhost:" + PORT, "/guestbook");
+            }
+        }
+        return createResponse("<html><h1>404</h1></html>");
+    }
+
+    private StringBuffer createResponse(String body) {
+        return createResponse(body, 200, "OK");
+    }
+
+    public String drawComments(String keyWord) {
+        StringBuffer responseBody = new StringBuffer();
+        String html = readFile(guestBookPath);
         StringBuffer commentsStr = new StringBuffer();
         for (String comment : comments) {
-            if (add) {
+            if (keyWord == null) {
                 commentsStr.append("<p>");
                 commentsStr.append(comment);
                 commentsStr.append("</p>");
             } else {
-                if (comment.contains(newWord)) {
+                if (comment.contains(keyWord)) {
                     commentsStr.append("<p>");
                     commentsStr.append(comment);
                     commentsStr.append("</p>");
@@ -139,11 +144,30 @@ public class MyServer {
             }
         }
         html = html.replace("<comments/>", commentsStr);
-        responseGuestbook = "HTTP/1.1 200 OK\n" +
-                "Content-Type: text/html; charset=utf-8\n" +
-                "Content-Length: " + html.length() + "\n" +
+        responseBody.append(html);
+        return responseBody.toString();
+    }
+
+    private StringBuffer createResponse(String body, int code, String codeName) {
+        StringBuffer response = new StringBuffer();
+        response.append("HTTP/1.1 " + code + " " + codeName + "\n" +
+                "Date: Mon, 23 May 2005 22:38:34 GMT\n" +
+                "Content-Type: text/html; charset=UTF-8\n" +
+                "Content-Length: " + body.length() + "\n" +
                 "Accept-Ranges: bytes\n" +
                 "Connection: close\n" +
-                "\n" + html;
+                "\n");
+        response.append(body.toString());
+        return response;
     }
+
+    private StringBuffer createResponseRedirect(String protocol, String hostname, String url) {
+        StringBuffer result = new StringBuffer();
+        result.append("HTTP/1.1 303 See Other\n");
+        result.append("Location:");
+        result.append(protocol + "://" + hostname + url);;
+        result.append("\n");
+        return result;
+    }
+
 }
