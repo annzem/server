@@ -7,11 +7,11 @@ import java.util.Map;
 
 public class Request {
 
-    public Request (String rawReqLine,
-                    String rawHeaders,
-                    String method,
-                    String url,
-                    String version) {
+    public Request(String rawReqLine,
+                   String rawHeaders,
+                   String method,
+                   String url,
+                   String version) {
         this.rawReqLine = rawReqLine;
         this.rawHeaders = rawHeaders;
         this.method = method;
@@ -62,24 +62,23 @@ public class Request {
         return version;
     }
 
-    public void readBody (InputStream inputStream, String headers) throws IOException {
+    public void readBody(InputStream inputStream) throws IOException {
         StringBuffer bodyBuffer = new StringBuffer();
-        //TODO
-//        String bodyLength = headers.split("\r\n")[2].split(" ")[1];
-//        int bodyLengthInt = Integer.parseInt(bodyLength);
-        byte [] bodyArray = new byte[15];
+        String bodyLength = headers.get("Content-Length");
+        int bodyLengthInt = Integer.parseInt(bodyLength);
+        byte[] bodyArray = new byte[bodyLengthInt];
         bodyBuffer.append((char) inputStream.read(bodyArray));
         rawBody = new String(bodyArray);
     }
 
-    public void parseHeaders () {
+    public void parseHeaders() {
         String[] headersArr = rawHeaders.split("\r\n");
         for (int i = 0; i < headersArr.length; i++) {
             headers.put(headersArr[i].split(": ")[0], headersArr[i].split(": ")[1]);
         }
     }
 
-    public void parseParamsOfGet () {
+    public void parseParamsOfGet() {
         if (getRawReqLine().contains("?")) {
             String paramsOfGetS = getRawReqLine().split(" ")[1].split("\\?")[1];
             String[] split = paramsOfGetS.split("&");
@@ -89,7 +88,7 @@ public class Request {
         }
     }
 
-    public void parseParamsOfPost () {
+    public void parseParamsOfPost() {
         String[] split = getRawBody().split("&");
         for (int i = 0; i < split.length; i++) {
             paramsOfPost.put(split[i].split("=")[0], split[i].split("=")[1]);

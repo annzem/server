@@ -100,7 +100,7 @@ public class Server {
         }
 
         String reqLine = rawHeadersAndReqLine.toString().split("\n")[0];
-        String headers = rawHeadersAndReqLine.toString().split("\n")[1];
+        String headers = rawHeadersAndReqLine.toString().split(reqLine + "\n")[1];
         String method = reqLine.split(" ")[0];
         String url = reqLine.split(" ")[1].split("\\?")[0];
         String version = reqLine.split(" ")[2];
@@ -108,7 +108,7 @@ public class Server {
         Request request = new Request(reqLine, headers, method, url, version);
         request.parseHeaders();
         if (method.equals("POST")) {
-            request.readBody(inputStream, headers);
+            request.readBody(inputStream);
             request.parseParamsOfPost();
         }
         if (method.equals("GET")) {
