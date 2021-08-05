@@ -2,6 +2,8 @@ package com.company;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -63,12 +65,11 @@ public class Request {
     }
 
     public void readBody(InputStream inputStream) throws IOException {
-        StringBuffer bodyBuffer = new StringBuffer();
         String bodyLength = headers.get("Content-Length");
         int bodyLengthInt = Integer.parseInt(bodyLength);
         byte[] bodyArray = new byte[bodyLengthInt];
-        bodyBuffer.append((char) inputStream.read(bodyArray));
-        rawBody = new String(bodyArray);
+        inputStream.read(bodyArray);
+        rawBody = URLDecoder.decode(new String(bodyArray), StandardCharsets.UTF_8.toString());
     }
 
     public void parseHeaders() {

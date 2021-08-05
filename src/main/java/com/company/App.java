@@ -18,26 +18,40 @@ public class App {
 
         server.getHandlers().put("guestbook", new ServerRequestHandler() {
             @Override
-            public void processRequest(Request request, Response response) throws PageNotFoundException{
+            public void processRequest(Request request, Response response) throws PageNotFoundException {
                 if (request.getUrl().equals("/guestbook")) {
-                    if (guestbook.parseNewComment(request) == null && guestbook.parseKeyword(request) == null) {
-                        if (guestbook.getComments().size() == 0) {
-                            guestbook.addStartComments();
-                        }
+                    if (guestbook.getComments().size() == 0) {
+                        guestbook.addStartComments();
                     }
-                    if (guestbook.parseNewComment(request) != null && guestbook.checkComments(request) == true) {
-                        guestbook.addNewComment(guestbook.parseNewComment(request));
+
+                    if (request.getMethod().equals("POST")) {
+                        guestbook.parseNewComment(request).ifPresent((comment) -> {
+                            guestbook.addNewComment(comment);
+                        });
+
+                        response.setStatusCode(301);
+                        response.setStatusText("Moved permanently");
+                        response.getResponseHeaders().put("Location", "/guestbook");
                     }
+
                     try {
-                        server.addContentFromFile(response, "/home/anna/IdeaProjects/server_connection/src/main/resources/guestbook.html");
+                        response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources/guestbook.html"));
                     } catch (IOException e) {
                         throw new PageNotFoundException(request.getUrl());
                     }
                     guestbook.drawComments(response, guestbook.parseKeyword(request));
 
+                } else if (request.getUrl().equals("/guestbook/get_comments")) {
+
+//                    response.getBody().append("[\"comment1\", \"comment2\", \"comment3\"]");
+//                    response.getBody().append("[");
+//                    for (String comment : guestbook.getComments()) {
+//                        response.getBody().append("\"");
+//                        response.getBody().append(comment);
+//                        response.getBody().append("\",");
+//                    }
+//                    response.getBody().append("]");
                 }
-
-
             }
         });
 

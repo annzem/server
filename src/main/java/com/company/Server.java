@@ -5,6 +5,8 @@ import org.apache.commons.io.IOUtils;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -96,14 +98,15 @@ public class Server {
     private Request readAndParseRequest(InputStream inputStream) throws IOException {
         StringBuffer rawHeadersAndReqLine = new StringBuffer();
         while (!rawHeadersAndReqLine.toString().endsWith("\r\n\r\n")) {
-            rawHeadersAndReqLine.append((char) inputStream.read());
+            //todo
+            rawHeadersAndReqLine.append(URLDecoder.decode(String.valueOf(((char) inputStream.read())), StandardCharsets.UTF_8.toString()));
         }
 
         String reqLine = rawHeadersAndReqLine.toString().split("\n")[0];
-        String headers = rawHeadersAndReqLine.toString().split(reqLine + "\n")[1];
         String method = reqLine.split(" ")[0];
         String url = reqLine.split(" ")[1].split("\\?")[0];
         String version = reqLine.split(" ")[2];
+        String headers = rawHeadersAndReqLine.toString().split(version + "\n")[1];
 
         Request request = new Request(reqLine, headers, method, url, version);
         request.parseHeaders();
@@ -126,20 +129,11 @@ public class Server {
             if (handler != null) {
                 handler.processRequest(request, response);
             } else {
-                addContentFromFile(response, "/home/anna/IdeaProjects/server_connection/src/main/resources" + request.getUrl() + ".html");
+                response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources" + request.getUrl() + ".html"));
             }
         } catch (IOException e) {
             throw new PageNotFoundException(request.getUrl());
         }
         return response;
-    }
-
-    public static void addContentFromFile(Response response, String path) throws IOException {
-        response.getBody().append(readFile(path));
-    }
-
-    private static String readFile(String path) throws IOException {
-        FileInputStream fis = new FileInputStream(path);
-        return IOUtils.toString(fis, "UTF-8");
     }
 }
