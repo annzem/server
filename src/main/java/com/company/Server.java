@@ -1,12 +1,8 @@
 package com.company;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -98,8 +94,7 @@ public class Server {
     private Request readAndParseRequest(InputStream inputStream) throws IOException {
         StringBuffer rawHeadersAndReqLine = new StringBuffer();
         while (!rawHeadersAndReqLine.toString().endsWith("\r\n\r\n")) {
-            //todo
-            rawHeadersAndReqLine.append(URLDecoder.decode(String.valueOf(((char) inputStream.read())), StandardCharsets.UTF_8.toString()));
+            rawHeadersAndReqLine.append((char) inputStream.read());
         }
 
         String reqLine = rawHeadersAndReqLine.toString().split("\n")[0];
@@ -127,7 +122,7 @@ public class Server {
             String firstUrlSegment = urlSegments[1];
             ServerRequestHandler handler = handlers.get(firstUrlSegment);
             if (handler != null) {
-                handler.processRequest(request, response);
+                handler.processRequest(request, response, urlSegments);
             } else {
                 response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources" + request.getUrl() + ".html"));
             }

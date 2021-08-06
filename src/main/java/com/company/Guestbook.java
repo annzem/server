@@ -17,16 +17,15 @@ public class Guestbook {
         return comments;
     }
 
-    public String parseKeyword(Request request) {
+    public Optional <String> parseKeyword(Request request) {
         if (request.getParamsOfGet().containsKey("word")) {
-            return request.getParamsOfGet().get("word");
-        } else return null;
+            return Optional.of(request.getParamsOfGet().get("word"));
+        } else return Optional.empty();
     }
 
     public Optional<String> parseNewComment(Request request) {
         if (request.getParamsOfPost().containsKey("comment")) {
-            String newCommentEnc = request.getParamsOfPost().get("comment");
-                return Optional.of(newCommentEnc);
+                return Optional.of(request.getParamsOfPost().get("comment"));
         } else return Optional.empty();
     }
 
@@ -39,13 +38,13 @@ public class Guestbook {
         return data;
     }
 
-    public Response drawComments(Response response, String keyWord) {
+    public Response drawComments(Response response, Optional<String> keyWord) {
         StringBuffer commentsStr = new StringBuffer();
         for (String comment : comments) {
-            if (keyWord == null) {
+            if (!keyWord.isPresent()) {
                 renderComment(commentsStr, comment);
             } else {
-                if (comment.contains(keyWord)) {
+                if (comment.contains(keyWord.get())) {
                     renderComment(commentsStr, comment);
                 }
             }

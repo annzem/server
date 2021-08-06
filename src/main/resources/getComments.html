@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<p id="field">time</p>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script>
+    function updateComments() {
+        $.get("/guestbook2/getComments", function (data) {
+            debugger;
+            let parse = JSON.parse(data);
+
+            $("#field").html(parse);
+        });
+    }
+    $(function () {
+        updateComments()
+    });
+</script>
+
+</body>
+</html>

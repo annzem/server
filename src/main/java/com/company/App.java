@@ -9,20 +9,18 @@ public class App {
 
         server.getHandlers().put("homepage", new ServerRequestHandler() {
             @Override
-            public void processRequest(Request request, Response response) {
+            public void processRequest(Request request, Response response, String[] urlSegments) {
                 response.getBody().append("<html>homepage</html>");
             }
         });
 
         final Guestbook guestbook = new Guestbook();
+        guestbook.addStartComments();
 
         server.getHandlers().put("guestbook", new ServerRequestHandler() {
             @Override
-            public void processRequest(Request request, Response response) throws PageNotFoundException {
+            public void processRequest(Request request, Response response, String[] urlSegments) throws PageNotFoundException {
                 if (request.getUrl().equals("/guestbook")) {
-                    if (guestbook.getComments().size() == 0) {
-                        guestbook.addStartComments();
-                    }
 
                     if (request.getMethod().equals("POST")) {
                         guestbook.parseNewComment(request).ifPresent((comment) -> {
@@ -41,16 +39,33 @@ public class App {
                     }
                     guestbook.drawComments(response, guestbook.parseKeyword(request));
 
-                } else if (request.getUrl().equals("/guestbook/get_comments")) {
+                } else if (request.getUrl().equals("/guest")) {
+                    //TODO
+                }
+            }
+        });
 
-//                    response.getBody().append("[\"comment1\", \"comment2\", \"comment3\"]");
-//                    response.getBody().append("[");
-//                    for (String comment : guestbook.getComments()) {
-//                        response.getBody().append("\"");
-//                        response.getBody().append(comment);
-//                        response.getBody().append("\",");
-//                    }
-//                    response.getBody().append("]");
+        server.getHandlers().put("guestbook2", new ServerRequestHandler() {
+            @Override
+            public void processRequest(Request request, Response response, String[] urlSegments) throws PageNotFoundException {
+                if (urlSegments.length == 2) {
+                    try {
+                        response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources/getComments.html"));
+                    } catch (IOException e) {
+                        throw new PageNotFoundException(request.getUrl());
+                    }
+                } else if (urlSegments[2].equals("getComments")) {
+
+                    response.getBody().append("[");
+                    for (int i = 0; i < guestbook.getComments().size(); i++) {
+                        response.getBody().append("\"");
+                        response.getBody().append(guestbook.getComments().get(i));
+                        response.getBody().append("\"");
+                        if (i != guestbook.getComments().size() - 1) {
+                            response.getBody().append(",");
+                        }
+                    }
+                    response.getBody().append("]");
                 }
             }
         });
