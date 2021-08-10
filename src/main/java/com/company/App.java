@@ -1,5 +1,8 @@
 package com.company;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 
 public class App {
@@ -50,22 +53,18 @@ public class App {
             public void processRequest(Request request, Response response, String[] urlSegments) throws PageNotFoundException {
                 if (urlSegments.length == 2) {
                     try {
-                        response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources/getComments.html"));
+                        response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources/guestbook2.html"));
                     } catch (IOException e) {
                         throw new PageNotFoundException(request.getUrl());
                     }
                 } else if (urlSegments[2].equals("getComments")) {
-
-                    response.getBody().append("[");
-                    for (int i = 0; i < guestbook.getComments().size(); i++) {
-                        response.getBody().append("\"");
-                        response.getBody().append(guestbook.getComments().get(i));
-                        response.getBody().append("\"");
-                        if (i != guestbook.getComments().size() - 1) {
-                            response.getBody().append(",");
-                        }
+                    response.getResponseHeaders().put("Content-Type", "application/json");
+                    try {
+                       String json = new ObjectMapper().writeValueAsString(guestbook.getComments());
+                        response.getBody().append(json);
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
                     }
-                    response.getBody().append("]");
                 }
             }
         });

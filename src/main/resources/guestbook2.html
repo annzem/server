@@ -8,14 +8,21 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script>
-    function updateComments() {
-        $.get("/guestbook2/getComments", function (data) {
-            debugger;
-            let parse = JSON.parse(data);
 
-            $("#field").html(parse);
+    function updateComments() {
+        $.get("/guestbook2/getComments", function (comments) {
+            let str = "";
+            for (let i = 0; i < comments.length; i++) {
+
+                str = str + "<p>" + comments[i] + "<hr/>" + "</p>";
+            }
+            $("#field").html(str);
+        }).fail(function(err) {
+            alert(err);
+            console.log(err);
         });
     }
+
     $(function () {
         updateComments()
     });

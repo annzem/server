@@ -39,8 +39,9 @@ public class Response {
             data.append(responseHeaders.get(headerName));
             data.append("\n");
         }
+
         data.append("Content-Length: ");
-        data.append(body.length());
+        data.append(body.toString().getBytes().length);
         data.append("\n");
         data.append("\n");
         data.append(body);
