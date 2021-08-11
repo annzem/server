@@ -4,28 +4,68 @@
     <meta charset="UTF-8">
 </head>
 <body>
-<p id="field">time</p>
+
+<form id="form1" action="/guestbook2" method="POST">
+    <div>
+        <label for="inp1" id="label1">Write a comment</label>
+        <p/>
+        <textarea id="inp1" name="comment" enctype="text/plain" cols=40 rows="4"></textarea>
+        <p/>
+        <input type="submit" value="Send">
+    </div>
+</form>
+
+<form id="form2" action="/guestbook2/getComments" method="GET">
+    <div>
+        <label for="inp2" id="label2">Find a comment</label>
+        <p/>
+        <textarea id="inp2" name="word" enctype="text/plain" cols=20 rows="1"></textarea>
+        <p/>
+        <input id="btn2" type="submit" value="Find">
+        <br/>
+        <p></p>
+    </div>
+</form>
+
+<div>
+    <p id="comments"></p>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js"
+        integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn"
+        crossorigin="anonymous"></script>
 
+<script>
     function updateComments() {
         $.get("/guestbook2/getComments", function (comments) {
-            let str = "";
-            for (let i = 0; i < comments.length; i++) {
-
-                str = str + "<p>" + comments[i] + "<hr/>" + "</p>";
-            }
-            $("#field").html(str);
-        }).fail(function(err) {
+            renderComments(comments);
+        }).fail(function (err) {
             alert(err);
             console.log(err);
         });
     }
 
-    $(function () {
-        updateComments()
+    function renderComments(comments) {
+        let str = "";
+        for (let i = 0; i < comments.length; i++) {
+            str = str + "<p>" + comments[i] + "<hr/>" + "</p>";
+        }
+        $("#comments").html(str);
+    }
+
+    $(document).ready(function () {
+        updateComments();
+        $('#form1').ajaxForm(function () {
+            updateComments();
+            document.getElementById("inp1").value = "";
+        });
+        $('#form2').ajaxForm(function (comments) {
+            renderComments(comments);
+        });
     });
+
 </script>
 
 </body>

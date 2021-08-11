@@ -83,16 +83,23 @@ public class Request {
         if (getRawReqLine().contains("?")) {
             String paramsOfGetS = getRawReqLine().split(" ")[1].split("\\?")[1];
             String[] split = paramsOfGetS.split("&");
-            for (int i = 0; i < split.length; i++) {
-                paramsOfGet.put(split[i].split("=")[0], split[i].split("=")[1]);
-            }
+            putToMap(split, paramsOfGet);
         }
     }
 
     public void parseParamsOfPost() {
         String[] split = getRawBody().split("&");
+        putToMap(split, paramsOfPost);
+    }
+
+    private void putToMap(String[] split, Map<String, String> params) {
         for (int i = 0; i < split.length; i++) {
-            paramsOfPost.put(split[i].split("=")[0], split[i].split("=")[1]);
+            String[] splittedKV = split[i].split("=");
+            if (splittedKV.length == 1) {
+                params.put(splittedKV[0], "");
+            } else {
+                params.put(splittedKV[0], splittedKV[1]);
+            }
         }
     }
 }
