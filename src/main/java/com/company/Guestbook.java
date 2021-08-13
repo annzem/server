@@ -1,38 +1,41 @@
 package com.company;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Guestbook {
-    private List<String> comments = new ArrayList<>();
 
-    public List<String> getComments() {
+    private List<Comment> comments = new ArrayList<>();
+
+    public List<Comment> getComments() {
         return comments;
     }
 
-    public List<String> addStartComments() {
-        getComments().add("The worst experience in my life! The color they gave me nothing to do with what I wanted. </br>Bad customer service, I had to go back so they could try to fix what they had done and the owner didn't even deign to ask me what had happened. </br>Marco R.");
-        getComments().add("Excellent work and attention, as always. Thank you <3</br> Janet Lisovsky");
-        return comments;
+    public void initStartComments() {
+        comments.add(new Comment("The worst experience in my life! The color they gave me nothing to do with what I wanted. </br>Bad customer service, I had to go back so they could try to fix what they had done and the owner didn't even deign to ask me what had happened.",
+                "Marco R."));
+        comments.add(new Comment("Excellent work and attention, as always. Thank you <3", "Janet Lisovsky"));
     }
 
-    public Optional <String> parseKeyword(Request request) {
+    public Optional<String> parseKeyword(Request request) {
+
         if (request.getParamsOfGet().containsKey("word")) {
             return Optional.of(request.getParamsOfGet().get("word"));
         } else return Optional.empty();
+
     }
 
-    public Optional<String> parseNewComment(Request request) {
-        if (request.getParamsOfPost().containsKey("comment")) {
-                return Optional.of(request.getParamsOfPost().get("comment"));
+    public Optional<Comment> parseNewComment(Request request) {
+        if (request.getParamsOfPost().containsKey("text")) {
+            Comment comment = new Comment(request.getParamsOfPost().get("text"), request.getParamsOfPost().get("name"));
+            return Optional.of(comment);
         } else return Optional.empty();
     }
 
-    public StringBuffer renderComment (StringBuffer data, String comment) {
-
+    public StringBuffer renderComment(StringBuffer data, Comment comment) {
         data.append("<p>");
-        data.append(comment);
+        data.append(comment.getDate());
+        data.append(comment.getText());
+        data.append(comment.getName());
         data.append("<hr/>");
         data.append("</p>");
         return data;
@@ -40,12 +43,12 @@ public class Guestbook {
 
     public Response drawComments(Response response, Optional<String> keyWord) {
         StringBuffer commentsStr = new StringBuffer();
-        for (String comment : comments) {
+        for (int i = 0; i < comments.size(); i++) {
             if (!keyWord.isPresent()) {
-                renderComment(commentsStr, comment);
+                renderComment(commentsStr, comments.get(i));
             } else {
-                if (comment.contains(keyWord.get())) {
-                    renderComment(commentsStr, comment);
+                if (comments.get(i).getText().contains(keyWord.get())) {
+                    renderComment(commentsStr, comments.get(i));
                 }
             }
         }
@@ -54,7 +57,7 @@ public class Guestbook {
         return response;
     }
 
-    public List<String> addNewComment(String newComment) {
+    public List<Comment> addNewComment(Comment newComment) {
         comments.add(newComment);
         return comments;
     }

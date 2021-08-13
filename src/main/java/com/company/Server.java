@@ -93,7 +93,8 @@ public class Server {
 
     private Request readAndParseRequest(InputStream inputStream) throws IOException {
         StringBuffer rawHeadersAndReqLine = new StringBuffer();
-        while (!rawHeadersAndReqLine.toString().endsWith("\r\n\r\n")) {
+
+        while (!rawHeadersAndReqLine.toString().endsWith("\r\n\r\n") && (rawHeadersAndReqLine.toString().getBytes().length < 1500)) {
             rawHeadersAndReqLine.append((char) inputStream.read());
         }
 

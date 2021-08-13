@@ -5,27 +5,28 @@
 </head>
 <body>
 
-<form id="form1" action="/guestbook2" method="POST">
+<form id="form1" action="/guestbook2/postComment" method="POST">
     <div>
-        <label for="inp1" id="label1">Write a comment</label>
+        <label id="label1">Tell us what you think!</label>
         <p/>
-        <textarea id="inp1" name="comment" enctype="text/plain" cols=40 rows="4"></textarea>
+        <textarea id="text" name="text" enctype="text/plain" maxlength="200" required placeholder="comment"></textarea>
         <p/>
+        <input id="name" name="name" required placeholder="name">
         <input type="submit" value="Send">
     </div>
 </form>
 
-<form id="form2" action="/guestbook2/getComments" method="GET">
-    <div>
-        <label for="inp2" id="label2">Find a comment</label>
-        <p/>
-        <textarea id="inp2" name="word" enctype="text/plain" cols=20 rows="1"></textarea>
-        <p/>
-        <input id="btn2" type="submit" value="Find">
-        <br/>
-        <p></p>
-    </div>
-</form>
+<!--<form id="form2" action="/guestbook2/getComments" method="GET">-->
+<!--    <div>-->
+<!--        <label for="inp2" id="label2">Find a comment</label>-->
+<!--        <p/>-->
+<!--        <input id="inp2" name="word" enctype="text/plain">-->
+<!--        <p/>-->
+<!--        <input id="btn2" type="submit" value="Find">-->
+<!--        <br/>-->
+<!--        <p></p>-->
+<!--    </div>-->
+<!--</form>-->
 
 <div>
     <p id="comments"></p>
@@ -50,16 +51,25 @@
     function renderComments(comments) {
         let str = "";
         for (let i = 0; i < comments.length; i++) {
-            str = str + "<p>" + comments[i] + "<hr/>" + "</p>";
+            str = str + "<p>" + comments[i].date + "<br/>" + comments[i].text + "<br/>" + "<i>" +comments[i].name + "</i>" + "<hr/>" + "</p>";
         }
         $("#comments").html(str);
     }
+
+    // function validateForm() {
+    //     let x = document.getElementById("text").value;
+    //     if (x == "") {
+    //         alert("Name must be filled out");
+    //         return false;
+    //     }
+    // }
 
     $(document).ready(function () {
         updateComments();
         $('#form1').ajaxForm(function () {
             updateComments();
-            document.getElementById("inp1").value = "";
+            document.getElementById("text").value = "";
+            document.getElementById("name").value = "";
         });
         $('#form2').ajaxForm(function (comments) {
             renderComments(comments);
