@@ -1,16 +1,25 @@
 package com.company;
 
-import java.text.SimpleDateFormat;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.util.Date;
 
 public class Comment {
     private String text;
-    private String date;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
+    private final Date date;
     private String name;
 
     public Comment(String text, String name) {
         this.text = text;
-        this.date = new SimpleDateFormat("dd.MM.yyyy").format(new Date());
+        this.date = new Date();
+        this.name = name;
+    }
+
+    Comment(String text, Date date, String name) {
+        this.text = text;
+        this.date = date;
         this.name = name;
     }
 
@@ -18,15 +27,11 @@ public class Comment {
         return text;
     }
 
-    public String getDate() {
-        return date;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
     public String getName() {
         return name;
+    }
+
+    public Date getDate() {
+        return date;
     }
 }
