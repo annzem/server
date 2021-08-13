@@ -1,35 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 </head>
 <body>
 
-<form id="form1" action="/guestbook2/postComment" method="POST">
-    <div>
-        <label id="label1">Tell us what you think!</label>
-        <p/>
-        <textarea id="text" name="text" enctype="text/plain" maxlength="200" required placeholder="comment"></textarea>
-        <p/>
-        <input id="name" name="name" required placeholder="name">
-        <input type="submit" value="Send">
+<div class="jumbotron text-center">
+    <h2><b>Welcome to our guestbook!</b></h2>
+    <p>Here you can read comments and share your own opinion about our product</p>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-6">
+
+            <form id="form1" action="/guestbook2/postComment" method="POST">
+                <div>
+                    <label id="label1">Tell us what you think!</label>
+                    <p/>
+                    <textarea id="text" name="text" enctype="text/plain" maxlength="200" required placeholder="comment"></textarea>
+                    <p/>
+                    <input id="name" name="name" required placeholder="name">
+                    <input type="submit" value="Send">
+                </div>
+            </form>
+        </div>
+
+        <div class="col-sm-6">
+            <form id="form2" action="/guestbook2/getComments" method="GET">
+                <div>
+                    <label for="inp2" id="label2">Find a comment</label>
+                    <p/>
+                    <input id="inp2" name="word" enctype="text/plain">
+                    <p/>
+                    <input id="btn2" type="submit" value="Find">
+                    <br/>
+                    <p></p>
+                </div>
+            </form> <br/>
+            <p id="comments"></p>
+        </div>
     </div>
-</form>
-
-<!--<form id="form2" action="/guestbook2/getComments" method="GET">-->
-<!--    <div>-->
-<!--        <label for="inp2" id="label2">Find a comment</label>-->
-<!--        <p/>-->
-<!--        <input id="inp2" name="word" enctype="text/plain">-->
-<!--        <p/>-->
-<!--        <input id="btn2" type="submit" value="Find">-->
-<!--        <br/>-->
-<!--        <p></p>-->
-<!--    </div>-->
-<!--</form>-->
-
-<div>
-    <p id="comments"></p>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"
@@ -49,20 +64,13 @@
     }
 
     function renderComments(comments) {
+        comments = comments.reverse();
         let str = "";
         for (let i = 0; i < comments.length; i++) {
             str = str + "<p>" + comments[i].date + "<br/>" + comments[i].text + "<br/>" + "<i>" +comments[i].name + "</i>" + "<hr/>" + "</p>";
         }
         $("#comments").html(str);
     }
-
-    // function validateForm() {
-    //     let x = document.getElementById("text").value;
-    //     if (x == "") {
-    //         alert("Name must be filled out");
-    //         return false;
-    //     }
-    // }
 
     $(document).ready(function () {
         updateComments();

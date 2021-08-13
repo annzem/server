@@ -13,7 +13,9 @@ public class Guestbook {
     public void initStartComments() {
         comments.add(new Comment("The worst experience in my life! The color they gave me nothing to do with what I wanted. </br>Bad customer service, I had to go back so they could try to fix what they had done and the owner didn't even deign to ask me what had happened.",
                 "Marco R."));
+        comments.get(0).setDate("16.04.2019");
         comments.add(new Comment("Excellent work and attention, as always. Thank you <3", "Janet Lisovsky"));
+        comments.get(1).setDate("02.11.2020");
     }
 
     public Optional<String> parseKeyword(Request request) {
