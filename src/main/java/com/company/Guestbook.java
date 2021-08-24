@@ -1,28 +1,31 @@
 package com.company;
 
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Guestbook {
 
-    private List<Comment> comments = new ArrayList<>();
+ //   private List<Comment> comments = new ArrayList<>();
 
-    public List<Comment> getComments() {
-        return comments;
+//    public List<Comment> getComments() {return comments;}
+
+    public List<Comment> getCommentsFromDB() {
+        return CommentsDB.getInstance().getCommentsFromDB();
     }
 
-    public void initStartComments() {
-        try {
-            comments.add(new Comment("The worst experience in my life! The color they gave me nothing to do with what I wanted. </br>Bad customer service, I had to go back so they could try to fix what they had done and the owner didn't even deign to ask me what had happened.",
-                    new SimpleDateFormat("dd.MM.yyyy").parse("16.04.2019"),
-                    "Marco R."));
-            comments.add(new Comment("Excellent work and attention, as always. Thank you <3",
-                    new SimpleDateFormat("dd.MM.yyyy").parse("02.11.2020"),
-                    "Janet Lisovsky"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    public void initStartComments() {
+//        try {
+//            comments.add(new Comment("The worst experience in my life! The color they gave me nothing to do with what I wanted. </br>Bad customer service, I had to go back so they could try to fix what they had done and the owner didn't even deign to ask me what had happened.",
+//                    new SimpleDateFormat("dd.MM.yyyy").parse("16.04.2019"),
+//                    "Marco R."));
+//            comments.add(new Comment("Excellent work and attention, as always. Thank you <3",
+//                    new SimpleDateFormat("dd.MM.yyyy").parse("02.11.2020"),
+//                    "Janet Lisovsky"));
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     public Optional<String> parseKeyword(Request request) {
 
@@ -51,12 +54,12 @@ public class Guestbook {
 
     public Response drawComments(Response response, Optional<String> keyWord) {
         StringBuffer commentsStr = new StringBuffer();
-        for (int i = 0; i < comments.size(); i++) {
+        for (int i = 0; i < CommentsDB.getInstance().getCommentsFromDB().size(); i++) {
             if (!keyWord.isPresent()) {
-                renderComment(commentsStr, comments.get(i));
+                renderComment(commentsStr, CommentsDB.getInstance().getCommentsFromDB().get(i));
             } else {
-                if (comments.get(i).getText().contains(keyWord.get())) {
-                    renderComment(commentsStr, comments.get(i));
+                if (CommentsDB.getInstance().getCommentsFromDB().get(i).getText().contains(keyWord.get())) {
+                    renderComment(commentsStr, CommentsDB.getInstance().getCommentsFromDB().get(i));
                 }
             }
         }
@@ -66,8 +69,12 @@ public class Guestbook {
     }
 
     public List<Comment> addNewComment(Comment newComment) {
-        comments.add(newComment);
-        return comments;
+        CommentsDB.getInstance().getCommentsFromDB().add(newComment);
+        return CommentsDB.getInstance().getCommentsFromDB();
+    }
+
+    public void addNewCommentToDB(Comment comment) {
+        CommentsDB.getInstance().putCommentToDB(comment);
     }
 }
 

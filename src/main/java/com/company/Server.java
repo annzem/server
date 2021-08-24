@@ -5,12 +5,17 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
 
     public static final int PORT = 8080;
     private static final String HTTP_VERSION = "HTTP/1.1";
     private Map<String, ServerRequestHandler> handlers = new HashMap<>();
+    private static boolean updateCache = false;
+
+    private ExecutorService executorService = Executors.newCachedThreadPool();
 
     public Map<String, ServerRequestHandler> getHandlers() {
         return handlers;
@@ -20,8 +25,21 @@ public class Server {
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
             while (true) {
+
                 Socket clientSocket = serverSocket.accept();
-                processRequest(clientSocket);
+                executorService.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            processRequest(clientSocket);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+
+
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -50,20 +68,28 @@ public class Server {
                 sendResponse(500, "Internal server error", response, output);
             }
         } catch (Exception e) {
-            try {
-                sendResponse(400, "Wrong request", new Response(), output);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-            e.printStackTrace();
-        } finally {
-            try {
-                input.close();
-            } catch (IOException e) {
+            if (output != null) {
+                try {
+                    sendResponse(400, "Wrong request", new Response(), output);
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
                 e.printStackTrace();
             }
+            if (request != null) {
+                System.err.println(request);
+                e.printStackTrace();
+            }
+        } finally {
+            close(input);
+            close(output);
+        }
+    }
+
+    private static void close(Closeable closeable) {
+        if (closeable != null) {
             try {
-                output.close();
+                closeable.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -97,7 +123,6 @@ public class Server {
         while (!rawHeadersAndReqLine.toString().endsWith("\r\n\r\n") && (rawHeadersAndReqLine.toString().getBytes().length < 1500)) {
             rawHeadersAndReqLine.append((char) inputStream.read());
         }
-
         String reqLine = rawHeadersAndReqLine.toString().split("\n")[0];
         String method = reqLine.split(" ")[0];
         String url = reqLine.split(" ")[1].split("\\?")[0];
@@ -116,16 +141,22 @@ public class Server {
         return request;
     }
 
+
     private Response route(Request request) throws PageNotFoundException {
         Response response = new Response();
         try {
             String[] urlSegments = request.getUrl().split("/");
-            String firstUrlSegment = urlSegments[1];
-            ServerRequestHandler handler = handlers.get(firstUrlSegment);
-            if (handler != null) {
-                handler.processRequest(request, response, urlSegments);
+            if (urlSegments.length > 1) {
+                String firstUrlSegment = urlSegments[1];
+
+                ServerRequestHandler handler = handlers.get(firstUrlSegment);
+                if (handler != null) {
+                    handler.processRequest(request, response, urlSegments);
+                } else {
+                    response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources" + request.getUrl() + ".html", updateCache));
+                }
             } else {
-                response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources" + request.getUrl() + ".html"));
+                response.getBody().append("empty");
             }
         } catch (IOException e) {
             throw new PageNotFoundException(request.getUrl());

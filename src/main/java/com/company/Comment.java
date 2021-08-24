@@ -1,23 +1,23 @@
 package com.company;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.OffsetDateTime;
 
-import java.util.Date;
 
 public class Comment {
+
     private String text;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd.MM.yyyy")
-    private final Date date;
+    private final OffsetDateTime date;
+
     private String name;
 
     public Comment(String text, String name) {
         this.text = text;
-        this.date = new Date();
+        this.date = OffsetDateTime.now();
         this.name = name;
     }
 
-    Comment(String text, Date date, String name) {
+    Comment(String text, OffsetDateTime date, String name) {
         this.text = text;
         this.date = date;
         this.name = name;
@@ -31,7 +31,7 @@ public class Comment {
         return name;
     }
 
-    public Date getDate() {
+    public OffsetDateTime getDate() {
         return date;
     }
 }

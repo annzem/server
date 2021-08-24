@@ -102,4 +102,19 @@ public class Request {
             }
         }
     }
+
+    @Override
+    public String toString() {
+        return "Request{" +
+                "rawReqLine='" + rawReqLine + '\'' +
+                ", rawHeaders='" + rawHeaders + '\'' +
+                ", method='" + method + '\'' +
+                ", url='" + url + '\'' +
+                ", version='" + version + '\'' +
+                ", rawBody='" + rawBody + '\'' +
+                ", headers=" + headers +
+                ", paramsOfGet=" + paramsOfGet +
+                ", paramsOfPost=" + paramsOfPost +
+                '}';
+    }
 }

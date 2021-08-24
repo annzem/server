@@ -1,8 +1,5 @@
 package com.company;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -11,9 +8,10 @@ import java.util.stream.Collectors;
 
 public class App {
 
+    private static boolean updateCache = false;
+
     public static void main(String[] args) {
         Server server = new Server();
-
         server.getHandlers().put("homepage", new ServerRequestHandler() {
             @Override
             public void processRequest(Request request, Response response, String[] urlSegments) {
@@ -22,7 +20,7 @@ public class App {
         });
 
         final Guestbook guestbook = new Guestbook();
-        guestbook.initStartComments();
+//        guestbook.initStartComments();
 
         server.getHandlers().put("guestbook", new ServerRequestHandler() {
             @Override
@@ -40,14 +38,11 @@ public class App {
                     }
 
                     try {
-                        response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources/guestbook.html"));
+                        response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources/guestbook.html", updateCache));
                     } catch (IOException e) {
                         throw new PageNotFoundException(request.getUrl());
                     }
                     guestbook.drawComments(response, guestbook.parseKeyword(request));
-
-                } else if (request.getUrl().equals("/guest")) {
-                    //TODO
                 }
             }
         });
@@ -57,25 +52,24 @@ public class App {
             public void processRequest(Request request, Response response, String[] urlSegments) throws PageNotFoundException {
                 if (urlSegments.length == 2) {
                     try {
-                        response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources/guestbook2.html"));
+                        response.getBody().append(Utils.readFile("/home/anna/IdeaProjects/server_connection/src/main/resources/guestbook2.html", updateCache));
                     } catch (IOException e) {
                         throw new PageNotFoundException(request.getUrl());
                     }
 
                 } else if (urlSegments[2].equals("getComments")) {
                     response.getResponseHeaders().put("Content-Type", "application/json");
-                    try {
-                        if (request.getParamsOfGet().containsKey("word")) {
-                            List<Comment> filtered = guestbook.getComments().stream().filter(s -> s.getText().contains(request.getParamsOfGet().get("word"))).collect(Collectors.toList());
-                            String json = new ObjectMapper().writeValueAsString(filtered);
-                            response.getBody().append(json);
-                        } else {
-                            String json = new ObjectMapper().writeValueAsString(guestbook.getComments());
-                            response.getBody().append(json);
-                        }
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
+                    if (request.getParamsOfGet().containsKey("word")) {
+//                            List<Comment> filtered = guestbook.getComments().stream().filter(s -> s.getText().contains(request.getParamsOfGet().get("word"))).collect(Collectors.toList());
+                        List<Comment> filtered = guestbook.getCommentsFromDB().stream().filter(s -> s.getText().contains(request.getParamsOfGet().get("word"))).collect(Collectors.toList());
+                        String json = Utils.getGson().toJson(filtered);
+                        response.getBody().append(json);
+                    } else {
+//                            String json = new ObjectMapper().writeValueAsString(guestbook.getComments());
+                        String json = Utils.getGson().toJson(guestbook.getCommentsFromDB());
+                        response.getBody().append(json);
                     }
+
                 } else if (urlSegments[2].equals("postComment")) {
                     if (request.getMethod().equals("POST")) {
                         guestbook.parseNewComment(request).ifPresent((comment) -> {
@@ -84,17 +78,16 @@ public class App {
                                 result.put("status", "failed");
                                 result.put("errormsg", "empty comment!");
                             } else {
-                                guestbook.addNewComment(comment);
+//                                guestbook.addNewComment(comment);
+                                guestbook.addNewCommentToDB(comment);
+
                                 result.put("status", "success");
                             }
 
-                            try {
-                                response.getResponseHeaders().put("Content-Type", "application/json");
-                                String json = new ObjectMapper().writeValueAsString(result);
-                                response.getBody().append(json);
-                            } catch (JsonProcessingException e) {
-                                throw new RuntimeException(e);
-                            }
+                            response.getResponseHeaders().put("Content-Type", "application/json");
+                            String json = Utils.getGson().toJson(result);
+                            response.getBody().append(json);
+
                         });
                     }
 
