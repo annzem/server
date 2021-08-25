@@ -10,8 +10,8 @@ public class Guestbook {
 
 //    public List<Comment> getComments() {return comments;}
 
-    public List<Comment> getCommentsFromDB() {
-        return CommentsDB.getInstance().getCommentsFromDB();
+    public List<Comment> getCommentsFromDB(Optional<String> keyWord) {
+        return CommentsDB.getInstance().getCommentsFromDB(keyWord);
     }
 
 //    public void initStartComments() {
@@ -44,7 +44,7 @@ public class Guestbook {
 
     public StringBuffer renderComment(StringBuffer data, Comment comment) {
         data.append("<p>");
-        data.append(new SimpleDateFormat("dd.MM.yyyy").format(comment.getDate()));
+        data.append(comment.getDate());
         data.append(comment.getText());
         data.append(comment.getName());
         data.append("<hr/>");
@@ -54,12 +54,13 @@ public class Guestbook {
 
     public Response drawComments(Response response, Optional<String> keyWord) {
         StringBuffer commentsStr = new StringBuffer();
-        for (int i = 0; i < CommentsDB.getInstance().getCommentsFromDB().size(); i++) {
+        for (int i = 0; i < CommentsDB.getInstance().getCommentsFromDB(keyWord).size(); i++) {
             if (!keyWord.isPresent()) {
-                renderComment(commentsStr, CommentsDB.getInstance().getCommentsFromDB().get(i));
+
+                renderComment(commentsStr, CommentsDB.getInstance().getCommentsFromDB(keyWord).get(i));
             } else {
-                if (CommentsDB.getInstance().getCommentsFromDB().get(i).getText().contains(keyWord.get())) {
-                    renderComment(commentsStr, CommentsDB.getInstance().getCommentsFromDB().get(i));
+                if (CommentsDB.getInstance().getCommentsFromDB(keyWord).get(i).getText().contains(keyWord.get())) {
+                    renderComment(commentsStr, CommentsDB.getInstance().getCommentsFromDB(keyWord).get(i));
                 }
             }
         }
@@ -69,8 +70,8 @@ public class Guestbook {
     }
 
     public List<Comment> addNewComment(Comment newComment) {
-        CommentsDB.getInstance().getCommentsFromDB().add(newComment);
-        return CommentsDB.getInstance().getCommentsFromDB();
+        CommentsDB.getInstance().getCommentsFromDB(Optional.empty()).add(newComment);
+        return CommentsDB.getInstance().getCommentsFromDB(Optional.empty());
     }
 
     public void addNewCommentToDB(Comment comment) {

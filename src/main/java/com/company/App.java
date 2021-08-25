@@ -61,12 +61,15 @@ public class App {
                     response.getResponseHeaders().put("Content-Type", "application/json");
                     if (request.getParamsOfGet().containsKey("word")) {
 //                            List<Comment> filtered = guestbook.getComments().stream().filter(s -> s.getText().contains(request.getParamsOfGet().get("word"))).collect(Collectors.toList());
-                        List<Comment> filtered = guestbook.getCommentsFromDB().stream().filter(s -> s.getText().contains(request.getParamsOfGet().get("word"))).collect(Collectors.toList());
+
+//                        List<Comment> filtered = guestbook.getCommentsFromDB().stream().filter(s -> s.getText().contains(request.getParamsOfGet().get("word"))).collect(Collectors.toList());
+
+                        List<Comment> filtered = guestbook.getCommentsFromDB(java.util.Optional.ofNullable(request.getParamsOfGet().get("word")));
                         String json = Utils.getGson().toJson(filtered);
                         response.getBody().append(json);
                     } else {
 //                            String json = new ObjectMapper().writeValueAsString(guestbook.getComments());
-                        String json = Utils.getGson().toJson(guestbook.getCommentsFromDB());
+                        String json = Utils.getGson().toJson(guestbook.getCommentsFromDB(java.util.Optional.ofNullable(request.getParamsOfGet().get("word"))));
                         response.getBody().append(json);
                     }
 
